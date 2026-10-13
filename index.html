@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>(25:00) Focus - Pomofocus</title>
+    <title>Minimalist Pomodoro Timer</title>
     <!-- Dumpling Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥟</text></svg>">
     <style>
@@ -63,7 +63,7 @@
             letter-spacing: -0.03em;
             display: flex;
             align-items: center;
-            gap: 0.5srem;
+            gap: 0.5rem;
         }
 
         .header-controls {
@@ -315,7 +315,7 @@
 
     <header>
         <div class="logo">
-            <span>🥟</span> pomofocus
+            <span>🥟</span> Minimalist Pomodoro
         </div>
         <div class="header-controls">
             <button class="icon-btn" id="pip-btn" title="Pop out floating timer">🗗</button>
@@ -349,7 +349,7 @@
     </main>
 
     <footer>
-        Minimalist Pomofocus Timer • Space to Start/Pause
+        Minimalist Pomodoro Timer • Space to Start/Pause
     </footer>
 
     <!-- Settings Modal -->
@@ -419,14 +419,8 @@
         function updateDisplay() {
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
-            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
-            timeDisplay.textContent = timeString;
-            
-            // Update Tab Title dynamically
-            const modeCapitalized = currentMode === 'focus' ? 'Focus' : (currentMode === 'shortBreak' ? 'Short Break' : 'Long Break');
-            document.title = `(${timeString}) ${modeCapitalized} - Pomofocus`;
-
             const progress = ((totalDuration - timeLeft) / totalDuration) * 100;
             setProgress(progress);
         }
@@ -503,7 +497,7 @@
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.5);
                 osc.connect(gain);
@@ -561,7 +555,6 @@
                         height: 300
                     });
 
-                    // Copy stylesheets over to PiP window
                     [...document.styleSheets].forEach((styleSheet) => {
                         try {
                             const cssRules = [...styleSheet.cssRules].map(rule => rule.cssText).join('');
@@ -584,16 +577,10 @@
                     pipWindow.document.body.style.margin = '0';
 
                     const cloneContainer = document.querySelector('main').cloneNode(true);
-                    // Remove mode selector from PiP for ultra minimalism if wanted, or keep it functional:
                     pipWindow.document.body.appendChild(cloneContainer);
 
-                    // Re-bind buttons inside PiP
                     pipWindow.document.getElementById('start-pause-btn').addEventListener('click', toggleTimer);
                     pipWindow.document.getElementById('reset-btn').addEventListener('click', resetTimer);
-
-                    pipWindow.addEventListener('pagehide', () => {
-                        // Window closed
-                    });
                 } catch (err) {
                     console.error('PiP failed:', err);
                 }
@@ -612,7 +599,6 @@
             }
         });
 
-        // Initial setup
         updateDisplay();
     </script>
 </body>
