@@ -1,605 +1,612 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minimalist Pomodoro Timer</title>
     <!-- Dumpling Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥟</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        pomodoro: {
+                            focus: '#f43f5e',
+                            short: '#10b981',
+                            long: '#3b82f6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --surface-color: #1e293b;
-            --surface-hover: #334155;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-focus: #f43f5e;
-            --accent-short: #0ea5e9;
-            --accent-long: #10b981;
-            --current-accent: var(--accent-focus);
-            --border-color: #334155;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        [data-theme="light"] {
-            --bg-color: #f8fafc;
-            --surface-color: #ffffff;
-            --surface-hover: #f1f5f9;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: var(--font-family);
-            transition: background-color 0.3s, color 0.3s;
-        }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 2rem 1rem;
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 480px;
-        }
-
-        .logo {
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .header-controls {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .icon-btn {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .icon-btn:hover {
-            background: var(--surface-hover);
-        }
-
-        main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 480px;
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 2rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        .mode-selector {
-            display: flex;
-            background: var(--bg-color);
-            padding: 4px;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            width: 100%;
-            border: 1px solid var(--border-color);
-        }
-
-        .mode-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .mode-btn.active {
-            background: var(--surface-color);
-            color: var(--text-main);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .timer-container {
-            position: relative;
-            width: 260px;
-            height: 260px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 2rem;
-        }
-
-        .progress-ring {
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s ease-in-out, stroke 0.5s ease;
             transform: rotate(-90deg);
-            width: 100%;
-            height: 100%;
+            transform-origin: 50% 50%;
         }
-
-        .progress-ring__circle-bg {
-            fill: none;
-            stroke: var(--border-color);
-            stroke-width: 6;
+        .btn-hover-effect {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .progress-ring__circle {
-            fill: none;
-            stroke: var(--current-accent);
-            stroke-width: 8;
-            stroke-linecap: round;
-            stroke-dasharray: 754;
-            stroke-dashoffset: 0;
-            transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+        .btn-hover-effect:hover {
+            transform: translateY(-2px);
         }
-
-        .timer-display {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .time {
-            font-size: 3.5rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .timer-status {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-top: 0.25rem;
-        }
-
-        .action-controls {
-            display: flex;
-            gap: 1rem;
-            width: 100%;
-        }
-
-        .primary-btn {
-            flex: 2;
-            background: var(--current-accent);
-            color: #ffffff;
-            border: none;
-            padding: 1rem;
-            font-size: 1rem;
-            font-weight: 700;
-            border-radius: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .primary-btn:hover {
-            opacity: 0.9;
-        }
-
-        .secondary-btn {
-            flex: 1;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 1rem;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 14px;
-            cursor: pointer;
-        }
-
-        .secondary-btn:hover {
-            background: var(--surface-hover);
-        }
-
-        /* Modal Styles */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s;
-            z-index: 1000;
-            padding: 1rem;
-        }
-
-        .modal.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-content {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            width: 100%;
-            max-width: 400px;
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .modal-header h2 {
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        .input-group {
-            margin-bottom: 1rem;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        .input-group input {
-            width: 100%;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-
-        .save-btn {
-            width: 100%;
-            background: var(--text-main);
-            color: var(--bg-color);
-            border: none;
-            padding: 0.75rem;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-
-        footer {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-align: center;
+        .btn-hover-effect:active {
+            transform: translateY(0);
         }
     </style>
 </head>
-<body data-theme="dark">
+<body class="bg-neutral-900 text-neutral-100 min-h-screen flex flex-col justify-between items-center font-sans transition-colors duration-500 selection:bg-rose-500 selection:text-white p-4 sm:p-6">
 
-    <header>
-        <div class="logo">
-            <span>🥟</span> Minimalist Pomodoro
+    <header class="w-full max-w-xl flex justify-between items-center py-4">
+        <div class="flex items-center space-x-2">
+            <span>🥟</span>
+            <span class="font-semibold tracking-wider text-sm uppercase text-neutral-400">PomoFocus</span>
         </div>
-        <div class="header-controls">
-            <button class="icon-btn" id="pip-btn" title="Pop out floating timer">🗗</button>
-            <button class="icon-btn" id="theme-btn" title="Toggle Theme">💡</button>
-            <button class="icon-btn" id="settings-btn" title="Settings">⚙️</button>
+        <div class="flex items-center space-x-3">
+            <!-- PiP Button -->
+            <button id="pipBtn" title="Mini Floating Timer (Picture-in-Picture)" class="p-2.5 rounded-xl bg-neutral-800/80 hover:bg-neutral-700/80 text-neutral-300 hover:text-white border border-neutral-700/50 backdrop-blur-md btn-hover-effect flex items-center gap-1.5 text-xs font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h12a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-6a2 2 0 00-2-2h-8a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                </svg>
+                <span class="hidden sm:inline">Floating Window</span>
+            </button>
+            
+            <!-- Audio Toggle -->
+            <button id="soundBtn" title="Toggle Sound" class="p-2.5 rounded-xl bg-neutral-800/80 hover:bg-neutral-700/80 text-neutral-300 hover:text-white border border-neutral-700/50 backdrop-blur-md btn-hover-effect">
+                <svg id="soundOnIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+                <svg id="soundOffIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                </svg>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button id="themeBtn" title="Toggle Theme" class="p-2.5 rounded-xl bg-neutral-800/80 hover:bg-neutral-700/80 text-neutral-300 hover:text-white border border-neutral-700/50 backdrop-blur-md btn-hover-effect">
+                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+
+            <!-- Settings Button -->
+            <button id="settingsBtn" title="Settings" class="p-2.5 rounded-xl bg-neutral-800/80 hover:bg-neutral-700/80 text-neutral-300 hover:text-white border border-neutral-700/50 backdrop-blur-md btn-hover-effect">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
         </div>
     </header>
 
-    <main>
-        <div class="mode-selector">
-            <button class="mode-btn active" data-mode="focus">Focus</button>
-            <button class="mode-btn" data-mode="shortBreak">Short Break</button>
-            <button class="mode-btn" data-mode="longBreak">Long Break</button>
+    <main class="flex-1 flex flex-col items-center justify-center w-full max-w-xl my-auto">
+        <!-- Mode Switcher Tabs -->
+        <div class="flex p-1.5 bg-neutral-800/60 dark:bg-neutral-800/60 rounded-2xl border border-neutral-700/40 backdrop-blur-md mb-8 sm:mb-12 shadow-inner">
+            <button id="modeFocus" class="mode-tab px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 bg-rose-500 text-white shadow-lg shadow-rose-500/20">Focus</button>
+            <button id="modeShort" class="mode-tab px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 text-neutral-400 hover:text-white">Short Break</button>
+            <button id="modeLong" class="mode-tab px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 text-neutral-400 hover:text-white">Long Break</button>
         </div>
 
-        <div class="timer-container">
-            <svg class="progress-ring" viewBox="0 0 260 260">
-                <circle class="progress-ring__circle-bg" cx="130" cy="130" r="120"></circle>
-                <circle class="progress-ring__circle" id="progress-circle" cx="130" cy="130" r="120"></circle>
+        <!-- Circular Timer Container -->
+        <div class="relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 240 240">
+                <!-- Background Ring -->
+                <circle cx="120" cy="120" r="105" stroke="currentColor" stroke-width="8" class="text-neutral-800 dark:text-neutral-800/80 fill-none" />
+                <!-- Progress Ring -->
+                <circle id="progressCircle" cx="120" cy="120" r="105" stroke="currentColor" stroke-width="8" stroke-dasharray="659.73" stroke-dashoffset="0" stroke-linecap="round" class="text-rose-500 fill-none progress-ring-circle" />
             </svg>
-            <div class="timer-display">
-                <div class="time" id="time-display">25:00</div>
-                <div class="timer-status" id="timer-status">Ready</div>
+
+            <!-- Time Text & Status -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span id="timeDisplay" class="text-5xl sm:text-6xl font-bold tracking-tight text-neutral-100 font-mono">25:00</span>
+                <span id="sessionStatus" class="mt-2 text-xs sm:text-sm font-medium tracking-widest uppercase text-neutral-400">Time to focus</span>
             </div>
         </div>
 
-        <div class="action-controls">
-            <button class="secondary-btn" id="reset-btn">Reset</button>
-            <button class="primary-btn" id="start-pause-btn">Start</button>
+        <!-- Timer Controls -->
+        <div class="flex items-center space-x-4 mt-8 sm:mt-12">
+            <!-- Reset Button -->
+            <button id="resetBtn" title="Reset Timer (R)" class="p-4 rounded-2xl bg-neutral-800/70 hover:bg-neutral-700/70 text-neutral-300 hover:text-white border border-neutral-700/50 backdrop-blur-md btn-hover-effect">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            </button>
+
+            <!-- Play/Pause Button -->
+            <button id="startPauseBtn" class="px-8 py-4 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg shadow-rose-500/25 btn-hover-effect min-w-[140px] flex items-center justify-center gap-2">
+                <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg id="pauseIcon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 fill-current hidden" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+                <span id="startPauseText" class="text-base tracking-wide">START</span>
+            </button>
+
+            <!-- Skip Button -->
+            <button id="skipBtn" title="Skip Session (S)" class="p-4 rounded-2xl bg-neutral-800/70 hover:bg-neutral-700/70 text-neutral-300 hover:text-white border border-neutral-700/50 backdrop-blur-md btn-hover-effect">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                </svg>
+            </button>
         </div>
+
+        <p class="text-xs text-neutral-500 mt-6 tracking-wide">Press <span class="px-1.5 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400 font-mono">Space</span> to start / pause</p>
     </main>
 
-    <footer>
-        Minimalist Pomodoro Timer • Space to Start/Pause
+    <footer class="w-full max-w-xl text-center py-4 text-xs text-neutral-500">
+        Minimalist Pomodoro Timer &bull; Floating Window Support Enabled
     </footer>
 
-    <!-- Settings Modal -->
-    <div class="modal" id="settings-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Timer Settings</h2>
-                <button class="icon-btn" id="close-modal-btn">✕</button>
+    <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-neutral-900 dark:bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-neutral-100">Timer Settings</h2>
+                <button id="closeSettingsBtn" class="text-neutral-400 hover:text-white p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
-            <div class="input-group">
-                <label for="focus-input">Focus Duration (minutes)</label>
-                <input type="number" id="focus-input" min="1" max="120" value="25">
+
+            <!-- Settings Inputs -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">Focus Duration (minutes)</label>
+                    <input type="number" id="inputFocus" min="1" max="120" value="25" class="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-2.5 text-neutral-100 focus:outline-none focus:border-rose-500 font-mono text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">Short Break Duration (minutes)</label>
+                    <input type="number" id="inputShort" min="1" max="60" value="5" class="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-2.5 text-neutral-100 focus:outline-none focus:border-rose-500 font-mono text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">Long Break Duration (minutes)</label>
+                    <input type="number" id="inputLong" min="1" max="60" value="15" class="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-2.5 text-neutral-100 focus:outline-none focus:border-rose-500 font-mono text-sm">
+                </div>
             </div>
-            <div class="input-group">
-                <label for="short-break-input">Short Break Duration (minutes)</label>
-                <input type="number" id="short-break-input" min="1" max="60" value="5">
+
+            <div class="mt-8 flex justify-end">
+                <button id="saveSettingsBtn" class="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-rose-500/20 btn-hover-effect">
+                    Save Changes
+                </button>
             </div>
-            <div class="input-group">
-                <label for="long-break-input">Long Break Duration (minutes)</label>
-                <input type="number" id="long-break-input" min="1" max="60" value="15">
-            </div>
-            <button class="save-btn" id="save-settings-btn">Save changes</button>
         </div>
     </div>
 
+    <!-- Hidden Canvas & Video for fallback Picture-in-Picture mode -->
+    <canvas id="pipCanvas" width="300" height="300" class="hidden"></canvas>
+    <video id="pipVideo" autoplay muted class="hidden"></video>
+
     <script>
-        // App State
-        let settings = {
-            focus: 25,
-            shortBreak: 5,
-            longBreak: 15
+        // State
+        const state = {
+            durations: {
+                focus: 25 * 60,
+                short: 5 * 60,
+                long: 15 * 60
+            },
+            currentMode: 'focus', // 'focus', 'short', 'long'
+            timeLeft: 25 * 60,
+            isRunning: false,
+            soundEnabled: true,
+            isDark: true,
+            timerId: null,
+            pipWindow: null,
+            canvasCtx: null,
+            videoStream: null
         };
 
-        let currentMode = 'focus';
-        let timeLeft = settings.focus * 60;
-        let totalDuration = settings.focus * 60;
-        let isRunning = false;
-        let timerInterval = null;
-
         // DOM Elements
-        const timeDisplay = document.getElementById('time-display');
-        const timerStatus = document.getElementById('timer-status');
-        const startPauseBtn = document.getElementById('start-pause-btn');
-        const resetBtn = document.getElementById('reset-btn');
-        const modeBtns = document.querySelectorAll('.mode-btn');
-        const progressCircle = document.getElementById('progress-circle');
-        const themeBtn = document.getElementById('theme-btn');
-        const settingsBtn = document.getElementById('settings-btn');
-        const settingsModal = document.getElementById('settings-modal');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const saveSettingsBtn = document.getElementById('save-settings-btn');
-        const pipBtn = document.getElementById('pip-btn');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const sessionStatus = document.getElementById('sessionStatus');
+        const progressCircle = document.getElementById('progressCircle');
+        const startPauseBtn = document.getElementById('startPauseBtn');
+        const startPauseText = document.getElementById('startPauseText');
+        const playIcon = document.getElementById('playIcon');
+        const pauseIcon = document.getElementById('pauseIcon');
+        const resetBtn = document.getElementById('resetBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const pipBtn = document.getElementById('pipBtn');
+        const soundBtn = document.getElementById('soundBtn');
+        const soundOnIcon = document.getElementById('soundOnIcon');
+        const soundOffIcon = document.getElementById('soundOffIcon');
+        const themeBtn = document.getElementById('themeBtn');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const modeFocusBtn = document.getElementById('modeFocus');
+        const modeShortBtn = document.getElementById('modeShort');
+        const modeLongBtn = document.getElementById('modeLong');
 
-        const focusInput = document.getElementById('focus-input');
-        const shortBreakInput = document.getElementById('short-break-input');
-        const longBreakInput = document.getElementById('long-break-input');
+        const inputFocus = document.getElementById('inputFocus');
+        const inputShort = document.getElementById('inputShort');
+        const inputLong = document.getElementById('inputLong');
 
-        const radius = progressCircle.r.baseVal.value;
-        const circumference = 2 * Math.PI * radius;
-        progressCircle.style.strokeDasharray = circumference;
+        const pipCanvas = document.getElementById('pipCanvas');
+        const pipVideo = document.getElementById('pipVideo');
 
-        function setProgress(percent) {
-            const offset = circumference - (percent / 100) * circumference;
-            progressCircle.style.strokeDashoffset = offset;
+        const RADIUS = 105;
+        const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+        // Sound generator using Web Audio API
+        function playChime() {
+            if (!state.soundEnabled) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                
+                const now = ctx.currentTime;
+                
+                // Pleasant major chord chime
+                const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                frequencies.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                    
+                    gain.gain.setValueAtTime(0, now + i * 0.1);
+                    gain.gain.linearRampToValueAtTime(0.15, now + i * 0.1 + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 1.2);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.start(now + i * 0.1);
+                    osc.stop(now + i * 0.1 + 1.2);
+                });
+            } catch (e) {
+                console.log("Audio play blocked or unsupported", e);
+            }
+        }
+
+        // Initialize UI
+        function init() {
+            progressCircle.style.strokeDasharray = `${CIRCUMFERENCE} ${CIRCUMFERENCE}`;
+            updateDisplay();
+            setupEventListeners();
+            initCanvas();
+        }
+
+        function initCanvas() {
+            state.canvasCtx = pipCanvas.getContext('2d');
+            renderCanvas();
+        }
+
+        function renderCanvas() {
+            const ctx = state.canvasCtx;
+            if (!ctx) return;
+
+            const total = state.durations[state.currentMode];
+            const progress = (total - state.timeLeft) / total;
+            const minutes = String(Math.floor(state.timeLeft / 60)).padStart(2, '0');
+            const seconds = String(state.timeLeft % 60).padStart(2, '0');
+
+            // Draw Canvas Background
+            ctx.fillStyle = state.isDark ? '#171717' : '#ffffff';
+            ctx.fillRect(0, 0, 300, 300);
+
+            // Ring Colors based on mode
+            let color = '#f43f5e';
+            if (state.currentMode === 'short') color = '#10b981';
+            if (state.currentMode === 'long') color = '#3b82f6';
+
+            // Base Ring
+            ctx.beginPath();
+            ctx.arc(150, 150, 110, 0, 2 * Math.PI);
+            ctx.strokeStyle = state.isDark ? '#262626' : '#e5e5e5';
+            ctx.lineWidth = 14;
+            ctx.stroke();
+
+            // Active Progress Arc
+            ctx.beginPath();
+            ctx.arc(150, 150, 110, -Math.PI / 2, (-Math.PI / 2) + (2 * Math.PI * progress));
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 14;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Text Display
+            ctx.fillStyle = state.isDark ? '#ffffff' : '#171717';
+            ctx.font = 'bold 52px "Plus Jakarta Sans", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${minutes}:${seconds}`, 150, 140);
+
+            ctx.fillStyle = state.isDark ? '#a3a3a3' : '#737373';
+            ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText(state.currentMode.toUpperCase(), 150, 190);
+
+            // Update PiP window if Document PiP active
+            if (state.pipWindow && state.pipWindow.document) {
+                const pipTime = state.pipWindow.document.getElementById('pipTimeDisplay');
+                const pipBar = state.pipWindow.document.getElementById('pipProgressBar');
+                if (pipTime) pipTime.textContent = `${minutes}:${seconds}`;
+                if (pipBar) pipBar.style.width = `${progress * 100}%`;
+            }
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).padStart ? String(Math.floor(seconds / 60)).padStart(2, '0') : Math.floor(seconds / 60);
+            const s = String(seconds % 60).padStart(2, '0');
+            return `${m}:${s}`;
         }
 
         function updateDisplay() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            const progress = ((totalDuration - timeLeft) / totalDuration) * 100;
-            setProgress(progress);
+            const timeStr = formatTime(state.timeLeft);
+            timeDisplay.textContent = timeStr;
+
+            // Update Page Title
+            const modeName = state.currentMode === 'focus' ? 'Focus' : 'Break';
+            document.title = `(${timeStr}) ${modeName} - PomoFocus`;
+
+            // Update Circular Progress Bar
+            const total = state.durations[state.currentMode];
+            const offset = CIRCUMFERENCE - ((total - state.timeLeft) / total) * CIRCUMFERENCE;
+            progressCircle.style.strokeDashoffset = offset;
+
+            // Mode stroke colors
+            if (state.currentMode === 'focus') {
+                progressCircle.className.baseVal = 'text-rose-500 fill-none progress-ring-circle';
+                startPauseBtn.className = startPauseBtn.className.replace(/bg-\w+-\d+/g, 'bg-rose-500').replace(/hover:bg-\w+-\d+/g, 'hover:bg-rose-600');
+            } else if (state.currentMode === 'short') {
+                progressCircle.className.baseVal = 'text-emerald-500 fill-none progress-ring-circle';
+                startPauseBtn.className = startPauseBtn.className.replace(/bg-\w+-\d+/g, 'bg-emerald-500').replace(/hover:bg-\w+-\d+/g, 'hover:bg-emerald-600');
+            } else {
+                progressCircle.className.baseVal = 'text-blue-500 fill-none progress-ring-circle';
+                startPauseBtn.className = startPauseBtn.className.replace(/bg-\w+-\d+/g, 'bg-blue-500').replace(/hover:bg-\w+-\d+/g, 'hover:bg-blue-600');
+            }
+
+            renderCanvas();
         }
 
         function switchMode(mode) {
-            currentMode = mode;
-            isRunning = false;
-            clearInterval(timerInterval);
-            startPauseBtn.textContent = 'Start';
-            timerStatus.textContent = 'Ready';
+            state.currentMode = mode;
+            pauseTimer();
+            state.timeLeft = state.durations[mode];
 
-            modeBtns.forEach(btn => {
-                if (btn.dataset.mode === mode) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+            // Tab Styling Updates
+            [modeFocusBtn, modeShortBtn, modeLongBtn].forEach(btn => {
+                btn.className = 'mode-tab px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 text-neutral-400 hover:text-white';
             });
 
-            const root = document.documentElement;
             if (mode === 'focus') {
-                totalDuration = settings.focus * 60;
-                root.style.setProperty('--current-accent', 'var(--accent-focus)');
-            } else if (mode === 'shortBreak') {
-                totalDuration = settings.shortBreak * 60;
-                root.style.setProperty('--current-accent', 'var(--accent-short)');
-            } else if (mode === 'longBreak') {
-                totalDuration = settings.longBreak * 60;
-                root.style.setProperty('--current-accent', 'var(--accent-long)');
+                modeFocusBtn.className = 'mode-tab px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 bg-rose-500 text-white shadow-lg shadow-rose-500/20';
+                sessionStatus.textContent = "Time to focus";
+            } else if (mode === 'short') {
+                modeShortBtn.className = 'mode-tab px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 bg-emerald-500 text-white shadow-lg shadow-emerald-500/20';
+                sessionStatus.textContent = "Time for a short break";
+            } else {
+                modeLongBtn.className = 'mode-tab px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 bg-blue-500 text-white shadow-lg shadow-blue-500/20';
+                sessionStatus.textContent = "Time for a long break";
             }
 
-            timeLeft = totalDuration;
             updateDisplay();
         }
 
-        function toggleTimer() {
-            if (isRunning) {
-                clearInterval(timerInterval);
-                isRunning = false;
-                startPauseBtn.textContent = 'Resume';
-                timerStatus.textContent = 'Paused';
-            } else {
-                isRunning = true;
-                startPauseBtn.textContent = 'Pause';
-                timerStatus.textContent = 'Running';
+        function startTimer() {
+            if (state.isRunning) return;
+            state.isRunning = true;
+            startPauseText.textContent = "PAUSE";
+            playIcon.classList.add('hidden');
+            pauseIcon.classList.remove('hidden');
 
-                timerInterval = setInterval(() => {
-                    if (timeLeft > 0) {
-                        timeLeft--;
-                        updateDisplay();
+            state.timerId = setInterval(() => {
+                if (state.timeLeft > 0) {
+                    state.timeLeft--;
+                    updateDisplay();
+                } else {
+                    playChime();
+                    pauseTimer();
+                    // Auto transition mode logic
+                    if (state.currentMode === 'focus') {
+                        switchMode('short');
                     } else {
-                        clearInterval(timerInterval);
-                        isRunning = false;
-                        startPauseBtn.textContent = 'Start';
-                        timerStatus.textContent = 'Completed!';
-                        playChime();
+                        switchMode('focus');
                     }
-                }, 1000);
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            state.isRunning = false;
+            startPauseText.textContent = "START";
+            playIcon.classList.remove('hidden');
+            pauseIcon.classList.add('hidden');
+            if (state.timerId) {
+                clearInterval(state.timerId);
+                state.timerId = null;
+            }
+        }
+
+        function toggleTimer() {
+            if (state.isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
             }
         }
 
         function resetTimer() {
-            clearInterval(timerInterval);
-            isRunning = false;
-            timeLeft = totalDuration;
-            startPauseBtn.textContent = 'Start';
-            timerStatus.textContent = 'Ready';
+            pauseTimer();
+            state.timeLeft = state.durations[state.currentMode];
             updateDisplay();
         }
 
-        function playChime() {
+        // Picture-in-Picture Handler
+        async function togglePiP() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.5);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 1.5);
-            } catch (e) {
-                console.log('Audio Context not allowed yet');
+                // Check if Document Picture-in-Picture API is available (Modern Chrome/Edge)
+                if ('documentPictureInPicture' in window) {
+                    if (state.pipWindow) {
+                        state.pipWindow.close();
+                        state.pipWindow = null;
+                        return;
+                    }
+
+                    const pipWin = await window.documentPictureInPicture.requestWindow({
+                        width: 260,
+                        height: 180,
+                    });
+
+                    state.pipWindow = pipWin;
+
+                    // Inject minimalist styles into PiP window
+                    const style = pipWin.document.createElement('style');
+                    style.textContent = `
+                        body {
+                            margin: 0;
+                            padding: 16px;
+                            background-color: #171717;
+                            color: #f5f5f5;
+                            font-family: system-ui, -apple-system, sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100vh;
+                            box-sizing: border-box;
+                            user-select: none;
+                        }
+                        .time { font-size: 42px; font-weight: 700; font-family: monospace; }
+                        .mode { font-size: 11px; text-transform: uppercase; tracking-wider: 2px; color: #a3a3a3; margin-top: 2px; }
+                        .progress-bar-bg { width: 100%; height: 6px; background: #262626; border-radius: 999px; margin-top: 14px; overflow: hidden; }
+                        .progress-bar { height: 100%; background: #f43f5e; width: 0%; transition: width 0.3s; }
+                    `;
+                    pipWin.document.head.appendChild(style);
+
+                    const minutes = String(Math.floor(state.timeLeft / 60)).padStart(2, '0');
+                    const seconds = String(state.timeLeft % 60).padStart(2, '0');
+
+                    pipWin.document.body.innerHTML = `
+                        <div class="time" id="pipTimeDisplay">${minutes}:${seconds}</div>
+                        <div class="mode">${state.currentMode} mode</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar" id="pipProgressBar"></div>
+                        </div>
+                    `;
+
+                    pipWin.addEventListener('unload', () => {
+                        state.pipWindow = null;
+                    });
+
+                    updateDisplay();
+                    return;
+                }
+
+                // Fallback to Canvas/Video Stream Picture-in-Picture
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else {
+                    if (!state.videoStream) {
+                        state.videoStream = pipCanvas.captureStream(30);
+                        pipVideo.srcObject = state.videoStream;
+                        await pipVideo.play();
+                    }
+                    await pipVideo.requestPictureInPicture();
+                }
+            } catch (err) {
+                alert("Picture-in-Picture window couldn't be opened in this browser context.");
+                console.error("PiP Error: ", err);
             }
         }
 
-        // Event Listeners
-        startPauseBtn.addEventListener('click', toggleTimer);
-        resetBtn.addEventListener('click', resetTimer);
-
-        modeBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                switchMode(e.target.dataset.mode);
+        // Setup DOM Listeners
+        function setupEventListeners() {
+            startPauseBtn.addEventListener('click', toggleTimer);
+            resetBtn.addEventListener('click', resetTimer);
+            skipBtn.addEventListener('click', () => {
+                if (state.currentMode === 'focus') switchMode('short');
+                else switchMode('focus');
             });
-        });
 
-        themeBtn.addEventListener('click', () => {
-            const body = document.body;
-            if (body.dataset.theme === 'dark') {
-                body.dataset.theme = 'light';
-                themeBtn.textContent = '🌙';
-            } else {
-                body.dataset.theme = 'dark';
-                themeBtn.textContent = '💡';
-            }
-        });
+            modeFocusBtn.addEventListener('click', () => switchMode('focus'));
+            modeShortBtn.addEventListener('click', () => switchMode('short'));
+            modeLongBtn.addEventListener('click', () => switchMode('long'));
 
-        settingsBtn.addEventListener('click', () => settingsModal.classList.add('open'));
-        closeModalBtn.addEventListener('click', () => settingsModal.classList.remove('open'));
+            pipBtn.addEventListener('click', togglePiP);
 
-        saveSettingsBtn.addEventListener('click', () => {
-            const newFocus = parseInt(focusInput.value);
-            const newShort = parseInt(shortBreakInput.value);
-            const newLong = parseInt(longBreakInput.value);
+            // Sound Toggle
+            soundBtn.addEventListener('click', () => {
+                state.soundEnabled = !state.soundEnabled;
+                soundOnIcon.classList.toggle('hidden', !state.soundEnabled);
+                soundOffIcon.classList.toggle('hidden', state.soundEnabled);
+            });
 
-            if (newFocus > 0) settings.focus = newFocus;
-            if (newShort > 0) settings.shortBreak = newShort;
-            if (newLong > 0) settings.longBreak = newLong;
-
-            settingsModal.classList.remove('open');
-            switchMode(currentMode);
-        });
-
-        // Picture-in-Picture Implementation
-        pipBtn.addEventListener('click', async () => {
-            if ('documentPictureInPicture' in window) {
-                try {
-                    const pipWindow = await window.documentPictureInPicture.requestWindow({
-                        width: 300,
-                        height: 300
-                    });
-
-                    [...document.styleSheets].forEach((styleSheet) => {
-                        try {
-                            const cssRules = [...styleSheet.cssRules].map(rule => rule.cssText).join('');
-                            const style = pipWindow.document.createElement('style');
-                            style.textContent = cssRules;
-                            pipWindow.document.head.appendChild(style);
-                        } catch (e) {
-                            const link = pipWindow.document.createElement('link');
-                            link.rel = 'stylesheet';
-                            link.href = styleSheet.href;
-                            pipWindow.document.head.appendChild(link);
-                        }
-                    });
-
-                    pipWindow.document.body.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--bg-color');
-                    pipWindow.document.body.style.display = 'flex';
-                    pipWindow.document.body.style.alignItems = 'center';
-                    pipWindow.document.body.style.justifyContent = 'center';
-                    pipWindow.document.body.style.height = '100vh';
-                    pipWindow.document.body.style.margin = '0';
-
-                    const cloneContainer = document.querySelector('main').cloneNode(true);
-                    pipWindow.document.body.appendChild(cloneContainer);
-
-                    pipWindow.document.getElementById('start-pause-btn').addEventListener('click', toggleTimer);
-                    pipWindow.document.getElementById('reset-btn').addEventListener('click', resetTimer);
-                } catch (err) {
-                    console.error('PiP failed:', err);
+            // Theme Toggle
+            themeBtn.addEventListener('click', () => {
+                state.isDark = !state.isDark;
+                document.documentElement.classList.toggle('dark', state.isDark);
+                if (state.isDark) {
+                    document.body.className = "bg-neutral-900 text-neutral-100 min-h-screen flex flex-col justify-between items-center font-sans transition-colors duration-500 selection:bg-rose-500 selection:text-white p-4 sm:p-6";
+                } else {
+                    document.body.className = "bg-neutral-100 text-neutral-800 min-h-screen flex flex-col justify-between items-center font-sans transition-colors duration-500 selection:bg-rose-500 selection:text-white p-4 sm:p-6";
                 }
-            } else {
-                alert('Document Picture-in-Picture is not supported in this browser. Try Google Chrome or Microsoft Edge.');
-            }
-        });
+                sunIcon.classList.toggle('hidden', !state.isDark);
+                moonIcon.classList.toggle('hidden', state.isDark);
+                updateDisplay();
+            });
 
-        // Keyboard Shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
-                e.preventDefault();
-                toggleTimer();
-            } else if (e.key.toLowerCase() === 'r' && document.activeElement.tagName !== 'INPUT') {
-                resetTimer();
-            }
-        });
+            // Settings Modal
+            settingsBtn.addEventListener('click', () => {
+                inputFocus.value = state.durations.focus / 60;
+                inputShort.value = state.durations.short / 60;
+                inputLong.value = state.durations.long / 60;
+                settingsModal.classList.remove('opacity-0', 'pointer-events-none');
+            });
 
-        updateDisplay();
+            closeSettingsBtn.addEventListener('click', () => {
+                settingsModal.classList.add('opacity-0', 'pointer-events-none');
+            });
+
+            saveSettingsBtn.addEventListener('click', () => {
+                state.durations.focus = Math.max(1, parseInt(inputFocus.value) || 25) * 60;
+                state.durations.short = Math.max(1, parseInt(inputShort.value) || 5) * 60;
+                state.durations.long = Math.max(1, parseInt(inputLong.value) || 15) * 60;
+
+                state.timeLeft = state.durations[state.currentMode];
+                pauseTimer();
+                updateDisplay();
+                settingsModal.classList.add('opacity-0', 'pointer-events-none');
+            });
+
+            // Keyboard Shortcuts
+            window.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT') return; // Ignore when typing in settings inputs
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    toggleTimer();
+                } else if (e.key === 'r' || e.key === 'R') {
+                    resetTimer();
+                } else if (e.key === 's' || e.key === 'R') {
+                    skipBtn.click();
+                }
+            });
+        }
+
+        // Initialize App on load
+        window.onload = init;
     </script>
 </body>
 </html>
